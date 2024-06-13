@@ -1,31 +1,34 @@
-# This workflow will build a golang project
-# For more information see: https://docs.github.com/en/actions/automating-builds-and-tests/building-and-testing-go
-
-name: test action
-
-on:
-  push:
-    branches: [ "main" ]
-  pull_request:
-    branches: [ "main" ]
-
-jobs:
-
-  build:
-    runs-on: windows-latest
-    steps:
-    - uses: actions/checkout@v4
-    
-    - name: Set up Go
-      uses: actions/setup-go@v4
-      with:
-        go-version: '1.20'
-
-    - name: Build
-      run: go build -v ./main/main.go 
-
-    - name : Upload artifact
-      uses: actions/upload-artifact@master
-      with:
-        name: OpenWrt
-        path: ./*
+name: Build Golang Project on ARM (Emulated)  
+  
+on:  
+  push:  
+    branches: [ "main" ]  
+  pull_request:  
+    branches: [ "main" ]  
+  
+jobs:  
+  build-arm:  
+    runs-on: ubuntu-22.04  
+    steps:  
+    - uses: actions/checkout@v4  
+  
+    - name: Set up QEMU and build  
+      uses: uraimo/run-on-arch-action@v2  
+      with:  
+        arch: armv7  
+        distro: ubuntu20.04  
+        run: |  
+          # 下载和解压 Go 的 ARM 版本  
+          wget -qO- https://go.dev/dl/go1.20.linux-armv6l.tar.gz | sudo tar -C /usr/local -xzf -  
+          # 将 Go 的 bin 目录添加到 PATH  
+          export PATH=$PATH:/usr/local/go/bin  
+  
+          # 现在可以在模拟的 ARM 环境中使用 Go  
+          go version  
+          go build -v -o myprogram ./main/main.go  
+  
+    - name: Upload artifact  
+      uses: actions/upload-artifact@v3  
+      with:  
+        name: myprogram-artifact  
+        path: myprogram
